@@ -1,4 +1,4 @@
-#IMPORT LIBRARY PACKAGES---------------------------------------------------
+#IMPORT LIBRARY PACKAGES--------------------------------------------------------
 import sys
 
 import numpy as np
@@ -23,7 +23,7 @@ from IPython.display import HTML
 #plt.style.use(["science", "notebook", "grid"])
 plt.rc('savefig', dpi=300)
 
-#POTENTIALS----------------------------------------------------------------
+#POTENTIALS---------------------------------------------------------------------
 #soft Gaussian potentials
 def potential(i):
   V = np.zeros((Nx, Nx))
@@ -56,7 +56,7 @@ def potential(i):
 
   return V
 
-#INITIAL WAVEFUNCTION-----------------------------------------------------
+#INITIAL WAVEFUNCTION-----------------------------------------------------------
 def initialize():
   RePsi = np.zeros((Nt, Nx, Nx))
   ImPsi = np.zeros((Nt, Nx, Nx))
@@ -80,10 +80,18 @@ def initialize():
       #B = k1*x1[m] + k2*x2[n]
       #RePsi[0, m, n] = np.exp(A) * np.cos(B)
       #ImPsi[0, m, n] = np.exp(A) * np.sin(B)
+
+  for m in range(0, Nx):
+    RePsi[0, 0, m] = 0.0
+    RePsi[0, Nx-1, m] - 0.0
+
+  for m in range(0, Nx):
+    RePsi[0, m, 0] = 0.0
+    RePsi[0, m, Nx-1] = 0.0
       
   return RePsi, ImPsi
 
-#SOLVING SE---------------------------------------------------------------
+#SOLVING SE---------------------------------------------------------------------
 def solveSE():
   emptyArray1 = np.empty((Nt, Nx))
         
@@ -118,20 +126,20 @@ def solveSE():
     Ptot = 0.0
     Prel = 0.0
 
-    p = 1
+    p = 0
 
     for m in range(1, Nx-1):
-      k = 1
+      k = 0
 
-      if p == 3:
-        p = 1
+      if p == 2:
+        p = 0
 
       for n in range(1, Nx):
         Rho = RePsi[l-1, m, n]*RePsi[l, m, n] + ImPsi[l-1, m, n]*ImPsi[l-1, m, n]
         Rho = Rho + symmetry*(RePsi[l-1, m, n]*RePsi[l, n, m] + ImPsi[l-1, m, n]*ImPsi[l-1, n, m]) #impose symmetry or antisymmetry
 
-        if k == 3:
-          k = 1
+        if k == 2:
+          k = 0
 
         Ptot = Ptot + w[k]*w[p]*Rho
 
@@ -145,19 +153,19 @@ def solveSE():
       for n in range(1, Nx-1):
         rho[m, n] = rho[m, n] / Ptot
 
-    p = 1
+    p = 0
 
     #get rho1, rho2 and Rho
     for m in range(1, Nx-1):
-      k = 1
+      k = 0
             
-      if p == 3:
-        p = 1
+      if p == 2:
+        p = 0
     
       for n in range(1, Nx-1):
         
-        if k == 3:
-          k = 1
+        if k == 2:
+          k = 0
 
         #for particle 1
         Rho = RePsi[l-1, m, n]*RePsi[l, m, n] + ImPsi[l-1, m, n]*ImPsi[l-1, m, n]
@@ -213,7 +221,7 @@ def solveSE():
 
   return emptyArray1, emptyArray2, emptyArray3
 
-#CONSTANTS-----------------------------------------------------------------
+#CONSTANTS----------------------------------------------------------------------
 #total space length
 L = 1.401
 
@@ -235,10 +243,10 @@ Nt = T/dt
 Nt = int(Nt)
 
 #wavenumber of 1st particle
-k1 = 157.0
+k1 = 110.0
 
 #wavenumber of second particle
-k2 = 157.0
+k2 = 110.0
 
 #width of initial wavepackets
 sigma = 0.05
@@ -250,7 +258,8 @@ x01 = 0.25
 x02 = 0.75
 
 #peak potential value
-V0 = -100000
+#V0 = -100000
+V0 = -49348.0
 
 #potential width
 alpha = 0.062
@@ -279,11 +288,11 @@ dtx = dt/dxx2
 con = -0.5/dxx2
 con2 = (dm1+dm2)*dtx
 
-#SPACE--------------------------------------------------------------------
+#SPACE--------------------------------------------------------------------------
 x1 = np.linspace(0, L, Nx)
 x2 = np.linspace(0, L, Nx)
 
-#MAIN---------------------------------------------------------------------
+#MAIN---------------------------------------------------------------------------
 #potential
 V = potential(1)
 
@@ -303,20 +312,34 @@ plot2 = sol[1]
 
 plot3 = sol[2]
 
-#PLOTTING OR ANIMATIONS---------------------------------------------------
+#PLOTTING OR ANIMATIONS---------------------------------------------------------
+fig, ax = plt.subplots(1, 1)
+
+ax.set_title("Two-Particle Collision. Attractive Gaussian Potential")
+
+ax.set_xlabel("x (m)")
+ax.set_ylabel("$||\psi||^{2}$")
+
+ax.set_xlim(0, 1.5)
+ax.set_ylim(0, 0.1)
+
+ax.plot(x1, plot1[0, :], label = "Paticle 1: Mass $m_{1} = 0.5$, wavenumber $k_{1} = 110$")
+ax.plot(x2, plot2[0, :], label = "Particle 2: Mass $m_{2} = 10m_{1}$, wavenumber $k_{2} = -k_{1}$")
+
+plt.tight_layout()
+
+ax.legend(loc = "upper right")
+
+#PLOTTING OR ANIMATIONS---------------------------------------------------------
 fig, ax = plt.subplots(1, 1)
 
 ax.set_xlim(0, 1.5)
 ax.set_ylim(0, 0.1)
 
-ax.plot(x1, plot1[0, :])
-ax.plot(x2, plot2[0, :])
+ax.set_title("Two-Particle Collision. Attractive Gaussian Potential")
 
-#PLOTTING OR ANIMATIONS---------------------------------------------------
-fig, ax = plt.subplots(1, 1)
-
-ax.set_xlim(0, 1.5)
-ax.set_ylim(0, 0.1)
+ax.set_xlabel("x (m)")
+ax.set_ylabel("$||\psi||^{2}$")
 
 line1, = ax.plot([], [])
 line2, = ax.plot([], [])
@@ -331,9 +354,14 @@ def animate(i):
   line1.set_data(x1, plot1[i, :])
   line2.set_data(x2, plot2[i, :])
 
+  line1.set_label("Paticle 1: Mass $m_{1} = 0.5$, wavenumber $k_{1} = 110$")
+  line2.set_label("Particle 2: Mass $m_{2} = 10m_{1}$, wavenumber $k_{2} = -k_{1}$")
+
+  ax.legend(loc = "upper right")
+
   return line1, line2, 
 
 #create an animation
 anim = animation.FuncAnimation(fig, animate, init_func = init, frames = Nt, interval = 50, blit = True)
 
-anim.save('collission.mp4', fps=30, extra_args=['-vcodec', 'libx264'], dpi = 150)
+anim.save('collision.mp4', fps=45, extra_args=['-vcodec', 'libx264'], dpi = 150)
